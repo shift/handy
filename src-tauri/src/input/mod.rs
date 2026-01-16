@@ -2,6 +2,12 @@ use enigo::{Enigo, Key, Keyboard, Mouse, Settings};
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 
+#[cfg(target_os = "linux")]
+pub mod evdev;
+
+#[cfg(target_os = "linux")]
+pub use evdev::{EvdevVirtualKeyboard, is_evdev_available};
+
 /// Wrapper for Enigo to store in Tauri's managed state.
 /// Enigo is wrapped in a Mutex since it requires mutable access.
 pub struct EnigoState(pub Mutex<Enigo>);

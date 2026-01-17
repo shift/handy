@@ -6,19 +6,18 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
 #[cfg(target_os = "linux")]
+use crate::input::{is_evdev_available, EvdevVirtualKeyboard};
+#[cfg(target_os = "linux")]
 use crate::utils::is_wayland;
 #[cfg(target_os = "linux")]
-use crate::input::{EvdevVirtualKeyboard, is_evdev_available};
+use once_cell::sync::Lazy;
 #[cfg(target_os = "linux")]
 use std::process::Command;
 #[cfg(target_os = "linux")]
 use std::sync::Mutex;
-#[cfg(target_os = "linux")]
-use once_cell::sync::Lazy;
 
 #[cfg(target_os = "linux")]
-static EVDEV_KEYBOARD: Lazy<Mutex<Option<EvdevVirtualKeyboard>>> = 
-    Lazy::new(|| Mutex::new(None));
+static EVDEV_KEYBOARD: Lazy<Mutex<Option<EvdevVirtualKeyboard>>> = Lazy::new(|| Mutex::new(None));
 
 /// Pastes text using the clipboard: saves current content, writes text, sends paste keystroke, restores clipboard.
 fn paste_via_clipboard(
@@ -75,11 +74,14 @@ fn try_send_key_combo_linux(paste_method: &PasteMethod) -> Result<bool, String> 
                 return Ok(true);
             }
             Err(e) => {
-                info!("Evdev key combo failed: {}, falling back to external tools", e);
+                info!(
+                    "Evdev key combo failed: {}, falling back to external tools",
+                    e
+                );
             }
         }
     }
-    
+
     if is_wayland() {
         if is_wtype_available() {
             info!("Using wtype for key combo");
@@ -127,7 +129,7 @@ fn try_direct_typing_linux(text: &str) -> Result<bool, String> {
             }
         }
     }
-    
+
     if is_wayland() {
         if is_wtype_available() {
             info!("Using wtype for direct text input");
@@ -163,9 +165,10 @@ fn try_direct_typing_linux(text: &str) -> Result<bool, String> {
 /// Type text directly via evdev on Linux
 #[cfg(target_os = "linux")]
 fn type_text_via_evdev(text: &str) -> Result<(), String> {
-    let mut keyboard_guard = EVDEV_KEYBOARD.lock()
+    let mut keyboard_guard = EVDEV_KEYBOARD
+        .lock()
         .map_err(|e| format!("Failed to lock evdev keyboard: {}", e))?;
-        
+
     if keyboard_guard.is_none() {
         match EvdevVirtualKeyboard::new() {
             Ok(keyboard) => {
@@ -177,22 +180,23 @@ fn type_text_via_evdev(text: &str) -> Result<(), String> {
             }
         }
     }
-    
+
     if let Some(keyboard) = keyboard_guard.as_mut() {
         keyboard.type_text(text)?;
     } else {
         return Err("Evdev keyboard not available".to_string());
     }
-    
+
     Ok(())
 }
 
 /// Send a key combination via evdev on Linux
 #[cfg(target_os = "linux")]
 fn send_key_combo_via_evdev(paste_method: &PasteMethod) -> Result<(), String> {
-    let mut keyboard_guard = EVDEV_KEYBOARD.lock()
+    let mut keyboard_guard = EVDEV_KEYBOARD
+        .lock()
         .map_err(|e| format!("Failed to lock evdev keyboard: {}", e))?;
-        
+
     if keyboard_guard.is_none() {
         match EvdevVirtualKeyboard::new() {
             Ok(keyboard) => {
@@ -204,13 +208,13 @@ fn send_key_combo_via_evdev(paste_method: &PasteMethod) -> Result<(), String> {
             }
         }
     }
-    
+
     if let Some(keyboard) = keyboard_guard.as_mut() {
         keyboard.send_paste_combo(paste_method)?;
     } else {
         return Err("Evdev keyboard not available".to_string());
     }
-    
+
     Ok(())
 }
 

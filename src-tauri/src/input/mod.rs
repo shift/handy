@@ -6,7 +6,7 @@ use tauri::{AppHandle, Manager};
 pub mod evdev;
 
 #[cfg(target_os = "linux")]
-pub use evdev::{EvdevVirtualKeyboard, is_evdev_available};
+pub use evdev::{is_evdev_available, EvdevVirtualKeyboard};
 
 /// Wrapper for Enigo to store in Tauri's managed state.
 /// Enigo is wrapped in a Mutex since it requires mutable access.

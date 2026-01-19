@@ -29,3 +29,9 @@ dist-ssr
 /target/
 recording_*
 .crush/
+
+# Nix
+result
+result-*
+.direnv/
+

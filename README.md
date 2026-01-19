@@ -81,24 +81,49 @@ This project is actively being developed and has some [known issues](https://git
 
 **Wayland Support (Linux):**
 
-- Limited support for Wayland display server
-- Requires [`wtype`](https://github.com/atx/wtype) or [`dotool`](https://sr.ht/~geb/dotool/) for text input to work correctly (see [Linux Notes](#linux-notes) below for installation)
+- **Significantly improved** with native evdev support (recommended)
+- **Legacy support**: [`wtype`](https://github.com/atx/wtype) or [`dotool`](https://sr.ht/~geb/dotool/) for text input (see [Linux Notes](#linux-notes) below for installation)
+- **evdev provides best compatibility** on all Wayland compositors
 
 ### Linux Notes
 
 **Text Input Tools:**
 
-For reliable text input on Linux, install the appropriate tool for your display server:
+For reliable text input on Linux, install the appropriate tool for your display server. Handy now includes native **evdev support** which provides the best compatibility:
 
-| Display Server | Recommended Tool | Install Command                                    |
-| -------------- | ---------------- | -------------------------------------------------- |
-| X11            | `xdotool`        | `sudo apt install xdotool`                         |
-| Wayland        | `wtype`          | `sudo apt install wtype`                           |
-| Both           | `dotool`         | `sudo apt install dotool` (requires `input` group) |
+| Method    | Priority              | Display Server  | Requirements              | Install Command                    |
+| --------- | --------------------- | --------------- | ------------------------- | ---------------------------------- |
+| **evdev** | **1st** (Recommended) | **X11/Wayland** | **User in `input` group** | **`sudo usermod -aG input $USER`** |
+| `wtype`   | 2nd                   | Wayland         | None                      | `sudo apt install wtype`           |
+| `xdotool` | 2nd                   | X11             | None                      | `sudo apt install xdotool`         |
+| `dotool`  | 3rd                   | Both            | User in `input` group     | `sudo apt install dotool`          |
 
-- **X11**: Install `xdotool` for both direct typing and clipboard paste shortcuts
-- **Wayland**: Install `wtype` (preferred) or `dotool` for text input to work correctly
-- **dotool setup**: Requires adding your user to the `input` group: `sudo usermod -aG input $USER` (then log out and back in)
+**Setup for evdev (Recommended):**
+
+```bash
+# Add your user to the input group for evdev support
+sudo usermod -aG input $USER
+
+# Log out and back in for changes to take effect
+# You can verify access with:
+ls -l /dev/uinput
+```
+
+**Input Method Priority:**
+
+Handy automatically tries input methods in this order:
+
+1. **evdev** (kernel-level virtual keyboard) - Best compatibility
+2. `wtype`/`xdotool`/`dotool` (user-space tools) - Good compatibility
+3. `enigo` (built-in fallback) - Limited compatibility
+
+**Benefits of evdev:**
+
+- Universal app compatibility (games, terminals, Java apps, Wine)
+- Works identically on X11 and Wayland
+- No focus stealing issues
+- True physical keyboard emulation
+- Works with IME and complex input methods
 
 Without these tools, Handy falls back to enigo which may have limited compatibility, especially on Wayland.
 
